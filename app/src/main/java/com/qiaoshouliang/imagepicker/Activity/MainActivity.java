@@ -5,17 +5,23 @@ import android.database.Cursor;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
+import android.os.Handler;
+import android.os.Message;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.widget.GridView;
 import android.widget.Toast;
 
 import com.qiaoshouliang.imagepicker.Module.ImageFloder;
 import com.qiaoshouliang.imagepicker.R;
+import com.qiaoshouliang.imagepicker.adapter.GridViewAdapter;
 
 import java.io.File;
 import java.io.FilenameFilter;
+import java.sql.Array;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -23,14 +29,53 @@ import java.util.Set;
 public class MainActivity extends AppCompatActivity {
 
     private List<ImageFloder> imageFloderList = new ArrayList<>();
-    private String maxDir = "";
+    private File maxDir = null;
     private int maxSize = 0;
+
+    //gridview
+    private GridView gridView;
+
+    private Handler handler = new Handler() {
+        @Override
+        public void handleMessage(Message msg) {
+            if (msg.what == 0x110) {
+                data2View();
+            }
+
+        }
+    };
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-//        getImages();
+
+        initView();
+        getImages();
+    }
+
+    private void initView() {
+        gridView = (GridView) findViewById(R.id.gv_images);
+
+    }
+
+    private void data2View() {
+        List<String> imgList;
+        //todo 这个地方要学习一下
+        imgList = Arrays.asList(maxDir.list(new FilenameFilter() {
+            @Override
+            public boolean accept(File dir, String filename) {
+                if (filename.endsWith(".jpg")
+                        || filename.endsWith(".JPG")
+                        || filename.endsWith(".PNG")
+                        || filename.endsWith(".png")
+                        || filename.endsWith("jpeg")
+                        || filename.endsWith(".JPEG"))
+                    return true;
+                return false;
+            }
+        }));
+        gridView.setAdapter(new GridViewAdapter(this, imgList, maxDir.getAbsolutePath()));
     }
 
     private void getImages() {
@@ -72,8 +117,11 @@ public class MainActivity extends AppCompatActivity {
                         @Override
                         public boolean accept(File dir, String filename) {
                             if (filename.endsWith(".jpg")
+                                    || filename.endsWith(".JPG")
+                                    || filename.endsWith(".PNG")
                                     || filename.endsWith(".png")
-                                    || filename.endsWith("jpeg"))
+                                    || filename.endsWith("jpeg")
+                                    || filename.endsWith(".JPEG"))
                                 return true;
                             return false;
 
@@ -85,12 +133,17 @@ public class MainActivity extends AppCompatActivity {
                     imageFloder.setCount(picSize);
                     imageFloder.setFirstImagePath(firstImagePath);
                     imageFloderList.add(imageFloder);
+                    Log.e("picSize", picSize+"");
+                    Log.e("maxSize", maxSize+"");
 
-                    if (picSize > maxSize){
+                    if (picSize > maxSize) {
                         maxSize = picSize;
-                        maxDir = dirPath;
+                        maxDir = parentFile;
+                        Log.e("maxDir", maxDir.getAbsolutePath());
                     }
                 }
+                cursor.close();
+                handler.sendEmptyMessage(0x110);
             }
         }).start();
 

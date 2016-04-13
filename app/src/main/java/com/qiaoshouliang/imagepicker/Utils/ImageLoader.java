@@ -153,6 +153,7 @@ public class ImageLoader {
 //TODO 漏洞很多，需要对照3-1初始化mUIHandler进行学习修改
     public void loadImage(final String path, final ImageView imageView) {
 
+
         Bitmap bitmap = getBitmapFromLruCache(path);
 
         if (bitmap != null) {
@@ -297,7 +298,7 @@ public class ImageLoader {
     //TODO 不知道loadImage 是放到哪个线程中
     private synchronized void addTasks(Runnable runnable) {
         taskQueue.add(runnable);
-
+//        taskQueue.add();
         try {
             if (poolThreadHandler == null)
                 poolThreadHandlerSemaphore.acquire();
