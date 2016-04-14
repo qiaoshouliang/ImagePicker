@@ -108,7 +108,10 @@ public class ImageLoader {
             public void handleMessage(Message msg) {
                 ImageHolder imageHolder = (ImageHolder) msg.obj;
                 ImageView imageView = imageHolder.imageView;
+                String path = imageHolder.path;
                 Bitmap bitmap = imageHolder.bitmap;
+
+                if(((String)imageView.getTag()).equals(path))
                 imageView.setImageBitmap(bitmap);
 
             }
@@ -153,7 +156,7 @@ public class ImageLoader {
 //TODO 漏洞很多，需要对照3-1初始化mUIHandler进行学习修改
     public void loadImage(final String path, final ImageView imageView) {
 
-
+        imageView.setTag(path);
         Bitmap bitmap = getBitmapFromLruCache(path);
 
         if (bitmap != null) {

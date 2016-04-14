@@ -12,7 +12,9 @@ import android.widget.ImageView;
 import com.qiaoshouliang.imagepicker.R;
 import com.qiaoshouliang.imagepicker.Utils.ImageLoader;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 /**
  * Created by qiaoshouliang on 16/4/13.
@@ -20,9 +22,11 @@ import java.util.List;
 public class GridViewAdapter extends BaseAdapter {
 
     private Context context;
-    private List imageList;
+    private List<String> imageList;
     private String parentPath;
     private LayoutInflater layoutInflater;
+
+    private static Set<String> selectedImage = new HashSet<>();
 
     public GridViewAdapter(Context context, List imageList, String parentPath) {
         this.context = context;
@@ -33,7 +37,7 @@ public class GridViewAdapter extends BaseAdapter {
 
     @Override
     public int getCount() {
-        Log.e("imageList.size()",imageList.size()+"");
+//        Log.e("imageList.size()",imageList.size()+"");
         return imageList.size();
     }
 
@@ -48,22 +52,55 @@ public class GridViewAdapter extends BaseAdapter {
     }
 
     @Override
-    public View getView(int position, View convertView, ViewGroup parent) {
+    public View getView(final int position, View convertView, ViewGroup parent) {
 
+        final String imagePath = parentPath + "/" + imageList.get(position);
+//        Log.e("qq-------imagePath:  ",imagePath);
         ViewHolder viewHolder = null;
-        if(convertView == null){
-            convertView = layoutInflater.inflate(R.layout.grid_view_item,parent,false);
+        if (convertView == null) {
+            convertView = layoutInflater.inflate(R.layout.grid_view_item, parent, false);
             viewHolder = new ViewHolder();
             viewHolder.imageView = (ImageView) convertView.findViewById(R.id.iv_picture);
             viewHolder.imageButton = (ImageButton) convertView.findViewById(R.id.ib_select);
             convertView.setTag(viewHolder);
-        }else {
+        } else {
             viewHolder = (ViewHolder) convertView.getTag();
         }
-            viewHolder.imageView.setImageResource(R.drawable.pictures_no);
-            viewHolder.imageButton.setImageResource(R.drawable.picture_unselected);
 
-        ImageLoader.getInstance().loadImage(parentPath+"/"+imageList.get(position),viewHolder.imageView);
+        final ViewHolder finalViewHolder = viewHolder;
+        viewHolder.imageView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (selectedImage.contains(imagePath)) {
+                    Log.e("qq-------", "1");
+                    selectedImage.remove(imagePath);
+                    finalViewHolder.imageButton.setImageResource(R.drawable.picture_unselected);
+                    finalViewHolder.imageView.setColorFilter(null);
+                } else {
+                    Log.e("qq-------", "2");
+                    selectedImage.add(imagePath);
+                    finalViewHolder.imageButton.setImageResource(R.drawable.pictures_selected);
+                    finalViewHolder.imageView.setColorFilter(0x77000000);
+                }
+                Log.e("position-------", "" + position);
+                for (String a : selectedImage) {
+                    Log.e("selectedImage-------", a);
+                }
+            }
+        });
+
+
+        viewHolder.imageView.setImageResource(R.drawable.pictures_no);
+        viewHolder.imageButton.setImageResource(R.drawable.picture_unselected);
+        viewHolder.imageView.setColorFilter(null);
+
+        if (selectedImage.contains(imagePath)) {
+            Log.e("qq-------", "3");
+            viewHolder.imageButton.setImageResource(R.drawable.pictures_selected);
+            viewHolder.imageView.setColorFilter(0x77000000);
+        }
+
+        ImageLoader.getInstance().loadImage(parentPath + "/" + imageList.get(position), viewHolder.imageView);
 
         return convertView;
     }

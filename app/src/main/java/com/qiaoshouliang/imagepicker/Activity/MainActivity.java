@@ -102,7 +102,7 @@ public class MainActivity extends AppCompatActivity {
 
                     String path = cursor.getString(
                             cursor.getColumnIndex(MediaStore.Images.Media.DATA));
-                    Log.e("path: ", path);
+//                    Log.e("path: ", path);
                     if (firstImagePath == null)
                         firstImagePath = path;
                     File parentFile = new File(path).getParentFile();
