@@ -16,6 +16,7 @@ import com.qiaoshouliang.imagepicker.Module.ImageSize;
 
 import java.lang.reflect.Field;
 import java.util.LinkedList;
+import java.util.concurrent.Executor;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.Semaphore;
@@ -31,7 +32,7 @@ public class ImageLoader {
     //线程池
     private ExecutorService threadPool;
     private LinkedList<Runnable> taskQueue = new LinkedList<>();
-    private static final int DEFAULT_THREAD_COUNT = 1;
+    private static final int DEFAULT_THREAD_COUNT = 3;
     private Type type = Type.LIFO;
 
     private enum Type {
@@ -88,7 +89,7 @@ public class ImageLoader {
 
         //获取应用可用的最大内存
         int maxMemory = (int) Runtime.getRuntime().maxMemory();
-        int cacheMemory = maxMemory / 8;
+        int cacheMemory = maxMemory / 6;
         //创建一个lruCache
         lruCache = new LruCache<String, Bitmap>(cacheMemory) {
             @Override
@@ -102,7 +103,7 @@ public class ImageLoader {
             }
         };
 
-        //todo 穿件UI线程的handler
+        // 创建UI线程的handler
         UIHandler = new Handler() {
             @Override
             public void handleMessage(Message msg) {
@@ -111,8 +112,8 @@ public class ImageLoader {
                 String path = imageHolder.path;
                 Bitmap bitmap = imageHolder.bitmap;
 
-                if(((String)imageView.getTag()).equals(path))
-                imageView.setImageBitmap(bitmap);
+                if (((String) imageView.getTag()).equals(path))
+                    imageView.setImageBitmap(bitmap);
 
             }
         };
@@ -155,7 +156,19 @@ public class ImageLoader {
     /****/
 //TODO 漏洞很多，需要对照3-1初始化mUIHandler进行学习修改
     public void loadImage(final String path, final ImageView imageView) {
-
+        /**
+         * 为什么要设置这个Tag呢？
+         * loadImage这个方法是在GridView Adapter中的getView方法中被调用。
+         * getView方法是在当GridView中的某一个item可见的时候，就会调用。
+         * 当快速滑动界面的时候，某一个item可能会很快的出现隐藏又出现
+         * 所以这个item就会接连调用两次loadImage,线程池中就会加入两个线程，先加入的后执行，
+         * imageView在GridView中的复用的，通过设置这个Tag所以imageView会加载当前可见的path,
+         * 那个不可见的path要在UIHandler加载的时候会被
+         * if(((String)imageView.getTag()).equals(path))
+         * imageView.setImageBitmap(bitmap);
+         * 过滤掉。
+         * 因为setTag是在主线程中执行的，不是异步的，所以imageView永远设置的都是最新的可见的path.
+         */
         imageView.setTag(path);
         Bitmap bitmap = getBitmapFromLruCache(path);
 
@@ -193,8 +206,8 @@ public class ImageLoader {
      * @param bitmap
      */
     private void addBitmapToLruCache(String path, Bitmap bitmap) {
-
-        lruCache.put(path, bitmap);
+        if (lruCache.get(path) == null)
+            lruCache.put(path, bitmap);
     }
 
     private Bitmap decodeSampledBitmapFromPath(String path, int width, int height) {
@@ -237,14 +250,24 @@ public class ImageLoader {
             width = lp.width; //获取imageview在layout中声明的宽度
         }
         if (width <= 0) {
+            /**
+             * 舍弃这种方法无法兼容SDK小于 16 的版本
 
-//                width = imageView.getMaxWidth();
+             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.JELLY_BEAN) {
+             width = imageView.getMaxWidth();
+             }
+             */
+            /**
+             * 通过反射来获取imageView的私有属性‘mMaxWidth’
+             */
             width = getFieldValue(imageView, "mMaxWidth");
         }
         if (width <= 0) {
             width = displayMetrics.widthPixels; //获取屏幕的宽度
         }
-
+        /**
+         * 获取高度
+         */
         int height = imageView.getHeight();
         if (height <= 0) {
             height = lp.height;
@@ -254,7 +277,7 @@ public class ImageLoader {
 //                height = imageView.getMaxHeight();
             height = getFieldValue(imageView, "mMaxHeight");
         }
-        if (width <= 0) {
+        if (height <= 0) {
             height = displayMetrics.heightPixels;
         }
 
@@ -280,7 +303,7 @@ public class ImageLoader {
             field.setAccessible(true);
 
             int fieldVal = field.getInt(object);
-            if (val > 0 && val < Integer.MAX_VALUE) {
+            if (fieldVal > 0 && fieldVal < Integer.MAX_VALUE) {
                 val = fieldVal;
             }
 
@@ -304,6 +327,9 @@ public class ImageLoader {
 //        taskQueue.add();
         try {
             if (poolThreadHandler == null)
+            /**
+             * 如果poolThreadHandler等于空则休眠，知道poolThreadHandlerSemaphore释放信号量
+             */
                 poolThreadHandlerSemaphore.acquire();
         } catch (InterruptedException e) {
             e.printStackTrace();

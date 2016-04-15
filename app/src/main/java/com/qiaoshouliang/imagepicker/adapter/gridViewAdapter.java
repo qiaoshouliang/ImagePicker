@@ -25,7 +25,9 @@ public class GridViewAdapter extends BaseAdapter {
     private List<String> imageList;
     private String parentPath;
     private LayoutInflater layoutInflater;
-
+    /**
+     * 存储已经选中的图片的全路径。
+     */
     private static Set<String> selectedImage = new HashSet<>();
 
     public GridViewAdapter(Context context, List imageList, String parentPath) {
@@ -72,19 +74,15 @@ public class GridViewAdapter extends BaseAdapter {
             @Override
             public void onClick(View v) {
                 if (selectedImage.contains(imagePath)) {
-                    Log.e("qq-------", "1");
+
                     selectedImage.remove(imagePath);
                     finalViewHolder.imageButton.setImageResource(R.drawable.picture_unselected);
                     finalViewHolder.imageView.setColorFilter(null);
                 } else {
-                    Log.e("qq-------", "2");
+
                     selectedImage.add(imagePath);
                     finalViewHolder.imageButton.setImageResource(R.drawable.pictures_selected);
                     finalViewHolder.imageView.setColorFilter(0x77000000);
-                }
-                Log.e("position-------", "" + position);
-                for (String a : selectedImage) {
-                    Log.e("selectedImage-------", a);
                 }
             }
         });
@@ -95,7 +93,6 @@ public class GridViewAdapter extends BaseAdapter {
         viewHolder.imageView.setColorFilter(null);
 
         if (selectedImage.contains(imagePath)) {
-            Log.e("qq-------", "3");
             viewHolder.imageButton.setImageResource(R.drawable.pictures_selected);
             viewHolder.imageView.setColorFilter(0x77000000);
         }
