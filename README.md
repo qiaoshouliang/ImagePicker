@@ -82,3 +82,8 @@ poolThreadHandlerSemaphore.release();
 ```
 1. 文件的list方法可以根据Filter来匹配符合规则图片  
 2. Arrays.asList 可将数组转化为List
+
+
+### 在Adapter中如何使Item的View保持原来的转态，例如在Item View 中接入收藏的标签，通过GONE 和 VISIABLE 来实现抱歉的隐藏和显示
+
+思路是在getView方法中记录有收藏标签的position（只要是能唯一表示Item的标示即可），在return convertView之前 判断这个item是否被记录，如果被记录，就显示标签，否则隐藏标签

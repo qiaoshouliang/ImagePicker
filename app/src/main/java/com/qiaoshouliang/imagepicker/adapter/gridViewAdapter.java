@@ -89,12 +89,14 @@ public class GridViewAdapter extends BaseAdapter {
 
 
         viewHolder.imageView.setImageResource(R.drawable.pictures_no);
-        viewHolder.imageButton.setImageResource(R.drawable.picture_unselected);
-        viewHolder.imageView.setColorFilter(null);
+
 
         if (selectedImage.contains(imagePath)) {
             viewHolder.imageButton.setImageResource(R.drawable.pictures_selected);
             viewHolder.imageView.setColorFilter(0x77000000);
+        }else {
+            viewHolder.imageButton.setImageResource(R.drawable.picture_unselected);
+            viewHolder.imageView.setColorFilter(null);
         }
 
         ImageLoader.getInstance().loadImage(parentPath + "/" + imageList.get(position), viewHolder.imageView);
