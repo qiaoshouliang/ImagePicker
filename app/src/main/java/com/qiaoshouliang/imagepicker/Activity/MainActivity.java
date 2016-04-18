@@ -72,6 +72,31 @@ public class MainActivity extends AppCompatActivity {
         DisplayMetrics displayMetrics = this.getResources().getDisplayMetrics();
         listImageDirPopupWindow = new ListImageDirPopupWindow(view,
                 displayMetrics.widthPixels,(int)(displayMetrics.heightPixels*0.6),imageFloderList);
+
+        listImageDirPopupWindow.setOnDirSelectedListener(new ListImageDirPopupWindow.OnDirSelectedListener() {
+            @Override
+            public void selected(ImageFloder imageFloder) {
+
+                List<String> imgList;
+                //todo 这个地方要学习一下
+                File file = new File(imageFloder.getDir());
+                imgList = Arrays.asList(file.list(new FilenameFilter() {
+                    @Override
+                    public boolean accept(File dir, String filename) {
+                        if (filename.endsWith(".jpg")
+                                || filename.endsWith(".JPG")
+                                || filename.endsWith(".PNG")
+                                || filename.endsWith(".png")
+                                || filename.endsWith("jpeg")
+                                || filename.endsWith(".JPEG"))
+                            return true;
+                        return false;
+                    }
+                }));
+                gridView.setAdapter(new GridViewAdapter(MainActivity.this, imgList, file.getAbsolutePath()));
+
+            }
+        });
     }
 
     private void initView() {
@@ -167,8 +192,10 @@ public class MainActivity extends AppCompatActivity {
                     ImageFloder imageFloder = new ImageFloder();
                     imageFloder.setDir(dirPath);
                     imageFloder.setCount(picSize);
-                    imageFloder.setFirstImagePath(firstImagePath);
+                    imageFloder.setFirstImagePath(path);
                     imageFloderList.add(imageFloder);
+
+//                    firstImagePath=null;
                     Log.e("picSize", picSize+"");
                     Log.e("maxSize", maxSize+"");
 

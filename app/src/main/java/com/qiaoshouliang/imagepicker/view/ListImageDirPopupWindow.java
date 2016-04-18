@@ -7,6 +7,7 @@ import android.graphics.drawable.BitmapDrawable;
 import android.util.Log;
 import android.view.MotionEvent;
 import android.view.View;
+import android.widget.AdapterView;
 import android.widget.ImageView;
 import android.widget.ListView;
 import android.widget.PopupWindow;
@@ -29,6 +30,8 @@ public class ListImageDirPopupWindow extends PopupWindow {
     private List<ImageFloder> imageFloderList;
 
     private ListView listView;
+
+    private OnDirSelectedListener onDirSelectedListener;
 
     public ListImageDirPopupWindow(View contentView, int width, int height,
                                    List<ImageFloder> imageFloderList) {
@@ -74,6 +77,13 @@ public class ListImageDirPopupWindow extends PopupWindow {
             }
         });
         listView.setAdapter(simpleAdapter);
+
+        listView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
+            @Override
+            public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
+                onDirSelectedListener.selected(imageFloderList.get(position));
+            }
+        });
     }
 
     private void configPopupWindow() {
@@ -97,6 +107,14 @@ public class ListImageDirPopupWindow extends PopupWindow {
                 return false;
             }
         });
+    }
+    public void setOnDirSelectedListener(OnDirSelectedListener onDirSelectedListener){
+        this.onDirSelectedListener =onDirSelectedListener;
+
+    }
+
+    public interface OnDirSelectedListener{
+        public void selected(ImageFloder imageFloder);
     }
 
 }
