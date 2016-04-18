@@ -1,7 +1,6 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent" >
-
     <GridView
         android:id="@+id/gv_images"
         android:layout_width="match_parent"
@@ -19,7 +18,7 @@
     <RelativeLayout
         android:id="@+id/rl_bottom"
         android:layout_width="match_parent"
-        android:layout_height="50dip"
+        android:layout_height="50dp"
         android:layout_alignParentBottom="true"
         android:background="#e0000000"
         android:clickable="true" >

@@ -1,5 +1,6 @@
 package com.qiaoshouliang.imagepicker.Activity;
 
+import android.app.ProgressDialog;
 import android.content.ContentResolver;
 import android.database.Cursor;
 import android.net.Uri;
@@ -9,13 +10,18 @@ import android.os.Handler;
 import android.os.Message;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.LayoutInflater;
+import android.view.View;
 import android.widget.GridView;
+import android.widget.RelativeLayout;
 import android.widget.Toast;
 
 import com.qiaoshouliang.imagepicker.Module.ImageFloder;
 import com.qiaoshouliang.imagepicker.R;
 import com.qiaoshouliang.imagepicker.adapter.GridViewAdapter;
+import com.qiaoshouliang.imagepicker.view.ListImageDirPopupWindow;
 
 import java.io.File;
 import java.io.FilenameFilter;
@@ -34,11 +40,19 @@ public class MainActivity extends AppCompatActivity {
     //gridview
     private GridView gridView;
 
+    private RelativeLayout rlBottom;
+
+    private ListImageDirPopupWindow listImageDirPopupWindow;
+    private ProgressDialog progressDialog;
+
+    private final int SCAN_IMAGE_COMPLETED = 0x110;
     private Handler handler = new Handler() {
         @Override
         public void handleMessage(Message msg) {
-            if (msg.what == 0x110) {
+            if (msg.what == SCAN_IMAGE_COMPLETED) {
+                progressDialog.dismiss();
                 data2View();
+                initListImageDirPopupWindow();
             }
 
         }
@@ -53,9 +67,31 @@ public class MainActivity extends AppCompatActivity {
         getImages();
     }
 
-    private void initView() {
-        gridView = (GridView) findViewById(R.id.gv_images);
+    private void initListImageDirPopupWindow() {
+        View view = LayoutInflater.from(this).inflate(R.layout.list_image_dir_popupwindow,null);
+        DisplayMetrics displayMetrics = this.getResources().getDisplayMetrics();
+        listImageDirPopupWindow = new ListImageDirPopupWindow(view,
+                displayMetrics.widthPixels,(int)(displayMetrics.heightPixels*0.6),imageFloderList);
+    }
 
+    private void initView() {
+        progressDialog = new ProgressDialog(this);
+        progressDialog.setTitle("扫描图片中");
+
+        gridView = (GridView) findViewById(R.id.gv_images);
+        rlBottom = (RelativeLayout) findViewById(R.id.rl_bottom);
+
+        rlBottom.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                /**
+                 * showAsDropDown这个方法挺有意思的，popupwindow 会根据 rlBottom上下的空余，来找到合适的位置
+                 * 如果上边有空余就显示上边，下边有空余就显示下边
+                 */
+
+                listImageDirPopupWindow.showAsDropDown(rlBottom,0,0);
+            }
+        });
     }
 
     private void data2View() {
@@ -85,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
             return;
         }
         final Set<String> dirPathSet = new HashSet<>();
+        progressDialog.show();
         new Thread(new Runnable() {
             @Override
             public void run() {
@@ -142,7 +179,7 @@ public class MainActivity extends AppCompatActivity {
                     }
                 }
                 cursor.close();
-                handler.sendEmptyMessage(0x110);
+                handler.sendEmptyMessage(SCAN_IMAGE_COMPLETED);
             }
         }).start();
 
